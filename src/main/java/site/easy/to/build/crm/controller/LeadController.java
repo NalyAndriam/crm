@@ -225,6 +225,7 @@ public class LeadController {
         expense.setTicket(null);
         expense.setLead(createdLead);
         expense.setAmount(BigDecimal.valueOf(amountDouble));
+        expense.setCustomer(customer);
 
         expenseService.save(expense);
 

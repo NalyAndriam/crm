@@ -175,6 +175,7 @@ public class TicketController {
         ticket.setCustomer(customer);
         ticket.setManager(manager);
         ticket.setEmployee(employee);
+
         ticket.setCreatedAt(LocalDateTime.now());
 
         ticketService.save(ticket);
@@ -183,6 +184,7 @@ public class TicketController {
         expense.setTicket(ticket);
         expense.setLead(null);
         expense.setAmount(BigDecimal.valueOf(amountDouble));
+        expense.setCustomer(customer);
 
         expenseService.save(expense);
 

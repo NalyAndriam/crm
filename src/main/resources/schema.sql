@@ -507,6 +507,19 @@ CREATE TABLE IF NOT EXISTS `budget` (
 );
 
 
+CREATE TABLE IF NOT EXISTS `expense` (
+    `expense_id` int unsigned NOT NULL AUTO_INCREMENT,
+    `customer_id` int unsigned DEFAULT NULL,
+    `amount` decimal(10,2) DEFAULT NULL,
+    `ticket_id` int unsigned DEFAULT NULL,
+    `lead_id` int unsigned DEFAULT NULL,
+    PRIMARY KEY (`expense_id`),  -- Ajoute la clé primaire sur budget_id
+    CONSTRAINT `customer_id_expense` FOREIGN KEY (`customer_id`) REFERENCES `customer` (`customer_id`),
+    CONSTRAINT `ticket_id_expense` FOREIGN KEY (`ticket_id`) REFERENCES `trigger_ticket` (`ticket_id`),
+    CONSTRAINT `lead_id_expense` FOREIGN KEY (`lead_id`) REFERENCES `trigger_lead` (`lead_id`)
+);
+
+
 
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 

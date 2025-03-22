@@ -117,13 +117,13 @@ public class BudgetController {
         budgetService.save(budget);
 
         // Rediriger vers la liste des budgets
-        return "redirect:/employee/budget/list";
+        return "redirect:/manager/budget/all-budget";
     }
 
-    @GetMapping("/all-budgets")
+    @GetMapping("/all-budget")
     public String showAllBudgets(Model model) {
         List<Budget> budgets = budgetService.findAll();
         model.addAttribute("budgets",budgets);
-        return "budget/my-budgets";
+        return "budget/all-budget";
     }
 }

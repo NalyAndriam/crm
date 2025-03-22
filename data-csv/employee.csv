@@ -1,0 +1,6 @@
+"id","username","firstName","lastName","email","password","provider"
+"1","johndoe","John","Doe","john.doe@example.com","password123",""
+"2","janedoe","Jane","Doe","jane.doe@example.com","securepass456","IT Department"
+"3","bobsmith","Bob","Smith","bob.smith@example.com","bobpass789",""
+"4","alicesmith","Alice","Smith","alice.smith@example.com","alicepass101","HR"
+"5","charlieb","Charlie","Brown","charlie.brown@example.com","charliepass202","Marketing"

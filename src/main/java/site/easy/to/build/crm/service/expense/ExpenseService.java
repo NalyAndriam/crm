@@ -17,5 +17,15 @@ public interface ExpenseService {
     public List<Expense> findByCustomerId(Integer customerId);
 
     public BigDecimal sumAmountByCustomerId(Integer customerId);
-    
+
+    public Expense findByTicketId(Integer ticketId);
+
+    public Expense findByLeadId(Integer leadId);
+
+    public Expense updateByTicketId(Integer ticketId, BigDecimal amount);
+
+    public Expense updateByLeadId(Integer leadId, BigDecimal amount);
+
+    public void deleteByLeadId(Integer leadId);
+    public void deleteByTicketId(Integer TicketId);
 }

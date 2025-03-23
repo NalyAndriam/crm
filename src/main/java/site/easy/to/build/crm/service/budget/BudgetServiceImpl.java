@@ -1,5 +1,6 @@
 package site.easy.to.build.crm.service.budget;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -26,6 +27,15 @@ public class BudgetServiceImpl implements BudgetService{
     public List<Budget> findAll() {
         return budgetRepository.findAll();
     }
-    
+
+    @Override
+    public List<Budget> findByCustomerId(Integer customerId){
+        return budgetRepository.findByCustomerCustomerId(customerId);
+    }
+
+    @Override
+    public BigDecimal sumAmountByCustomerId( Integer customerId){
+        return budgetRepository.sumAmountByCustomerCustomerId(customerId);
+    }
     
 }

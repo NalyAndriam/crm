@@ -520,6 +520,14 @@ CREATE TABLE IF NOT EXISTS `expense` (
 );
 
 
+CREATE TABLE IF NOT EXISTS `rate` (
+    `rate_id` int unsigned NOT NULL AUTO_INCREMENT,
+    `rate` decimal(10,2) DEFAULT NULL,
+    `inserted_at` datetime DEFAULT NULL,
+    PRIMARY KEY (`rate_id`)
+);
+
+INSERT INTO `rate` VALUES (NULL, 80, CURRENT_TIMESTAMP); 
 
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 

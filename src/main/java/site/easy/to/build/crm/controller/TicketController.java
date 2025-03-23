@@ -198,7 +198,7 @@ public class TicketController {
             ticketService.save(ticket);
             expenseService.save(expense);
             if (isRateExceeded(customerId)) {
-                redirectAttributes.addFlashAttribute("alertMessage", "Le taux du budget a été dépassé");
+                redirectAttributes.addFlashAttribute("alertMessage", "The budget rate has been exceeded");
             }
             return "redirect:/employee/ticket/assigned-tickets";
         }
@@ -215,7 +215,7 @@ public class TicketController {
         ticketService.save(ticket);             // pas de confirmation et de budget depasse
         expenseService.save(expense);
         if (isRateExceeded(customerId)) {
-            redirectAttributes.addFlashAttribute("alertMessage", "Le taux du budget a été dépassé");
+            redirectAttributes.addFlashAttribute("alertMessage", "The budget rate has been exceeded");
         }
         return "redirect:/employee/ticket/assigned-tickets";
     }

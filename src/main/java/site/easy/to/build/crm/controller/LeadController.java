@@ -2,6 +2,7 @@ package site.easy.to.build.crm.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityManager;
@@ -184,7 +185,8 @@ public class LeadController {
                              @RequestParam("customerId") int customerId, @RequestParam("employeeId") int employeeId,
                              Authentication authentication, @RequestParam("allFiles")@Nullable String files,
                              @RequestParam("folderId") @Nullable String folderId, Model model,
-                             @RequestParam("amount") double amountDouble, RedirectAttributes redirectAttributes) 
+                             @RequestParam("amount") double amountDouble, RedirectAttributes redirectAttributes,
+                             @RequestParam(value = "confirm", required = false) Boolean confirm)
                              throws JsonProcessingException {
 
         int userId = authenticationUtils.getLoggedInUserId(authentication);
@@ -225,15 +227,96 @@ public class LeadController {
             }
         }
 
-        Lead createdLead = leadService.save(lead);
-        fileUtil.saveFiles(allFiles, createdLead);
-
         Expense expense = new Expense();
         expense.setTicket(null);
-        expense.setLead(createdLead);
         expense.setAmount(BigDecimal.valueOf(amountDouble));
         expense.setCustomer(customer);
 
+        if (isBudgetExceeded(customerId, expense.getAmount())) {
+            model.addAttribute("lead", lead);
+            model.addAttribute("customerId", customerId);
+            model.addAttribute("employeeId", employeeId);
+            model.addAttribute("amount", amountDouble);
+            model.addAttribute("files", files);
+            model.addAttribute("folderId", folderId);
+            return "lead/confirm";
+        }
+
+        Lead createdLead = leadService.save(lead);
+        expense.setLead(createdLead);
+        fileUtil.saveFiles(allFiles, createdLead);
+        expenseService.save(expense);
+
+
+        if (isRateExceeded(customerId)){
+            System.out.println("fay");
+            redirectAttributes.addFlashAttribute("alertMessage", "The rate for the budget has been exceeded");
+        }
+        redirectAttributes.addFlashAttribute("");
+
+        if (lead.getGoogleDrive() != null) {
+            fileUtil.saveGoogleDriveFiles(authentication, allFiles, folderId, createdLead);
+        }
+
+        if (lead.getStatus().equals("meeting-to-schedule")) {
+            return "redirect:/employee/calendar/create-event?leadId=" + lead.getLeadId();
+        }
+        if(AuthorizationUtil.hasRole(authentication, "ROLE_MANAGER")) {
+            return "redirect:/employee/lead/created-leads";
+        }
+        return "redirect:/employee/lead/assigned-leads";
+    }
+
+
+    @PostMapping("/confirm")
+    public String confirmLead(@ModelAttribute("lead") @Validated Lead lead, BindingResult bindingResult,
+                             @RequestParam("customerId") int customerId, @RequestParam("employeeId") int employeeId,
+                             Authentication authentication, @RequestParam("allFiles")@Nullable String files,
+                             @RequestParam("folderId") @Nullable String folderId, @RequestParam("amount") double amountDouble, 
+                             RedirectAttributes redirectAttributes, Model model) throws JsonProcessingException {
+
+        if (bindingResult.hasErrors()) {
+            return "lead/confirm";
+        }
+
+        int userId = authenticationUtils.getLoggedInUserId(authentication);
+        User manager = userService.findById(userId);
+        if(manager.isInactiveUser()) {
+            return "error/account-inactive";
+        }
+
+        User employee = userService.findById(employeeId);
+        Customer customer = customerService.findByCustomerId(customerId);
+
+        lead.setCustomer(customer);
+        lead.setEmployee(employee);
+        lead.setManager(manager);
+        lead.setGoogleDriveFolderId(folderId);
+        lead.setCreatedAt(LocalDateTime.now());
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        List<Attachment> allFiles = objectMapper.readValue(files, new TypeReference<List<Attachment>>() {
+        });
+
+        if (!(authentication instanceof UsernamePasswordAuthenticationToken) && googleDriveApiService != null) {
+            OAuthUser oAuthUser = authenticationUtils.getOAuthUserFromAuthentication(authentication);
+            try {
+                if (folderId != null && !folderId.isEmpty()) {
+                    googleDriveApiService.checkFolderExists(oAuthUser, folderId);
+                }
+            } catch (IOException | GeneralSecurityException e) {
+                return "error/500";
+            }
+        }
+
+        Expense expense = new Expense();
+        expense.setTicket(null);
+        expense.setAmount(BigDecimal.valueOf(amountDouble));
+        expense.setCustomer(customer);
+
+        Lead createdLead = leadService.save(lead);
+        expense.setLead(createdLead);
+        fileUtil.saveFiles(allFiles, createdLead);
         expenseService.save(expense);
 
         if (isRateExceeded(customerId)){
@@ -254,6 +337,7 @@ public class LeadController {
         }
         return "redirect:/employee/lead/assigned-leads";
     }
+    
 
     @GetMapping("/update/{id}")
     public String showUpdatingForm(Model model, @PathVariable("id") int id, Authentication authentication) {
@@ -662,5 +746,23 @@ public class LeadController {
         }
         
         return false;
+    }
+
+    public boolean isBudgetExceeded(int customerId, BigDecimal amount) {
+        BigDecimal sumBudget = budgetService.sumAmountByCustomerId(customerId);
+        BigDecimal sumExpense = expenseService.sumAmountByCustomerId(customerId);
+    
+        if (sumExpense == null) {
+            sumExpense = BigDecimal.ZERO;
+        }
+    
+        BigDecimal totalExpense = sumExpense.add(amount);
+    
+        System.out.println("sumBudget = " + sumBudget);
+        System.out.println("sumExpense (existantes) = " + sumExpense);
+        System.out.println("totalExpense (existantes + actuelle) = " + totalExpense);
+        System.out.println("customerId = " + customerId);
+    
+        return totalExpense.compareTo(sumBudget) > 0;
     }
 }

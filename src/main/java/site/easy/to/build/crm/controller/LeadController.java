@@ -33,6 +33,8 @@ import site.easy.to.build.crm.service.expense.ExpenseService;
 import site.easy.to.build.crm.service.file.FileService;
 import site.easy.to.build.crm.service.lead.LeadActionService;
 import site.easy.to.build.crm.service.lead.LeadService;
+import site.easy.to.build.crm.service.budget.BudgetService;
+import site.easy.to.build.crm.service.rate.RateService;
 import site.easy.to.build.crm.service.settings.LeadEmailSettingsService;
 import site.easy.to.build.crm.service.user.UserService;
 import site.easy.to.build.crm.util.*;
@@ -46,6 +48,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 
 @Controller
 @RequestMapping("/employee/lead")
@@ -65,6 +68,8 @@ public class LeadController {
     private final GoogleGmailApiService googleGmailApiService;
     private final EntityManager entityManager;
     private final ExpenseService expenseService;
+    private final BudgetService budgetService;
+    private final RateService rateService;
 
     @Autowired
     public LeadController(LeadService leadService, AuthenticationUtils authenticationUtils, UserService userService, 
@@ -72,7 +77,7 @@ public class LeadController {
                           GoogleCalendarApiService googleCalendarApiService, FileService fileService,
                           GoogleDriveApiService googleDriveApiService, GoogleDriveFileService googleDriveFileService, FileUtil fileUtil,
                           LeadEmailSettingsService leadEmailSettingsService, GoogleGmailApiService googleGmailApiService, 
-                          EntityManager entityManager, ExpenseService expenseService) {
+                          EntityManager entityManager, ExpenseService expenseService, BudgetService budgetService, RateService rateService) {
         this.leadService = leadService;
         this.authenticationUtils = authenticationUtils;
         this.userService = userService;
@@ -87,6 +92,8 @@ public class LeadController {
         this.googleGmailApiService = googleGmailApiService;
         this.entityManager = entityManager;
         this.expenseService= expenseService;
+        this.budgetService= budgetService;
+        this.rateService= rateService;
     }
 
     @GetMapping("/show/{id}")
@@ -228,6 +235,12 @@ public class LeadController {
         expense.setCustomer(customer);
 
         expenseService.save(expense);
+
+        if (isRateExceeded(customerId)){
+            System.out.println("fay");
+            redirectAttributes.addFlashAttribute("alertMessage", "The rate for the budget has been exceeded");
+        }
+        redirectAttributes.addFlashAttribute("");
 
         if (lead.getGoogleDrive() != null) {
             fileUtil.saveGoogleDriveFiles(authentication, allFiles, folderId, createdLead);
@@ -629,5 +642,25 @@ public class LeadController {
         model.addAttribute("attachments", attachments);
         model.addAttribute("folders", folders);
         model.addAttribute("hasGoogleDriveAccess", hasGoogleDriveAccess);
+    }
+
+    public boolean isRateExceeded(int customerId) {
+        BigDecimal sumBudget = budgetService.sumAmountByCustomerId(customerId);
+        BigDecimal sumExpense = expenseService.sumAmountByCustomerId(customerId);
+        
+        System.out.println("sumBudget = " + sumBudget);
+        System.out.println("sumExpense = " + sumExpense);
+        System.out.println("customerId = " + customerId);
+
+        Rate rate = rateService.getLast();
+        BigDecimal rateValue = rate.getRate();
+        
+        BigDecimal maxAllowedExpense = sumBudget.multiply(rateValue).divide(BigDecimal.valueOf(100)); // sumBudget * rateValue / 100
+        
+        if (sumExpense.compareTo(maxAllowedExpense) > 0) {
+            return true; 
+        }
+        
+        return false;
     }
 }

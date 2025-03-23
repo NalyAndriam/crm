@@ -15,10 +15,12 @@ import site.easy.to.build.crm.entity.*;
 import site.easy.to.build.crm.entity.settings.TicketEmailSettings;
 import site.easy.to.build.crm.google.service.acess.GoogleAccessService;
 import site.easy.to.build.crm.google.service.gmail.GoogleGmailApiService;
+import site.easy.to.build.crm.service.budget.BudgetService;
 import site.easy.to.build.crm.service.customer.CustomerService;
 import site.easy.to.build.crm.service.expense.ExpenseService;
 import site.easy.to.build.crm.service.settings.TicketEmailSettingsService;
 import site.easy.to.build.crm.service.ticket.TicketService;
+import site.easy.to.build.crm.service.rate.RateService;
 import site.easy.to.build.crm.service.user.UserService;
 import site.easy.to.build.crm.util.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -45,12 +47,15 @@ public class TicketController {
     private final GoogleGmailApiService googleGmailApiService;
     private final EntityManager entityManager;
     private final ExpenseService expenseService;
+    private final BudgetService budgetService;
+    private final RateService rateService;
 
 
     @Autowired
     public TicketController(TicketService ticketService, AuthenticationUtils authenticationUtils, UserService userService, 
                             CustomerService customerService, TicketEmailSettingsService ticketEmailSettingsService, 
-                            GoogleGmailApiService googleGmailApiService, EntityManager entityManager, ExpenseService expenseService) {
+                            GoogleGmailApiService googleGmailApiService, EntityManager entityManager, ExpenseService expenseService,
+                            BudgetService budgetService, RateService rateService) {
         this.ticketService = ticketService;
         this.authenticationUtils = authenticationUtils;
         this.userService = userService;
@@ -59,6 +64,8 @@ public class TicketController {
         this.googleGmailApiService = googleGmailApiService;
         this.entityManager = entityManager;
         this.expenseService= expenseService;
+        this.budgetService= budgetService;
+        this.rateService= rateService;
     }
 
     @GetMapping("/show-ticket/{id}")
@@ -187,6 +194,12 @@ public class TicketController {
         expense.setCustomer(customer);
 
         expenseService.save(expense);
+
+        if (isRateExceeded(customerId)){
+            System.out.println("fay");
+            redirectAttributes.addFlashAttribute("alertMessage", "The rate for the budget has been exceeded");
+        }
+        redirectAttributes.addFlashAttribute("");
 
         return "redirect:/employee/ticket/assigned-tickets";
     }
@@ -390,4 +403,25 @@ public class TicketController {
             }
         }
     }
+
+    public boolean isRateExceeded(int customerId) {
+        BigDecimal sumBudget = budgetService.sumAmountByCustomerId(customerId);
+        BigDecimal sumExpense = expenseService.sumAmountByCustomerId(customerId);
+        
+        System.out.println("sumBudget = " + sumBudget);
+        System.out.println("sumExpense = " + sumExpense);
+        System.out.println("customerId = " + customerId);
+
+        Rate rate = rateService.getLast();
+        BigDecimal rateValue = rate.getRate();
+        
+        BigDecimal maxAllowedExpense = sumBudget.multiply(rateValue).divide(BigDecimal.valueOf(100)); // sumBudget * rateValue / 100
+        
+        if (sumExpense.compareTo(maxAllowedExpense) > 0) {
+            return true; 
+        }
+        
+        return false;
+    }
+    
 }

@@ -90,7 +90,7 @@
                                     <tbody>
                                     <tr th:if="${budgets != null}" th:each="budget : ${budgets}">
                                         <td th:text="${budget.budgetId}"></td>
-                                        <td th:text="${budget.customer.name}"></td>
+                                        <td th:text="${budget.customer?.name}"></td>
                                         <td th:text="${budget.amount}"></td>
                                         <td th:text="${#temporals.format(budget.budgetDate, 'yyyy-MM-dd HH:mm:ss')}"></td>
                                         <td><a th:href="${home + 'employee/budget/update/' + budget.budgetId}"><i class="fas fa-edit"></i></a></td>

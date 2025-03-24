@@ -15,11 +15,13 @@ import jakarta.persistence.EntityNotFoundException;
 import site.easy.to.build.crm.entity.Customer;
 import site.easy.to.build.crm.entity.Expense;
 import site.easy.to.build.crm.entity.Lead;
+import site.easy.to.build.crm.entity.Rate;
 import site.easy.to.build.crm.entity.Ticket;
 import site.easy.to.build.crm.service.budget.BudgetService;
 import site.easy.to.build.crm.service.customer.CustomerService;
 import site.easy.to.build.crm.service.expense.ExpenseService;
 import site.easy.to.build.crm.service.lead.LeadService;
+import site.easy.to.build.crm.service.rate.RateService;
 import site.easy.to.build.crm.service.ticket.TicketService;
 
 @RestController
@@ -32,15 +34,17 @@ public class DashboardController {
     private final LeadService leadService;
     private final ExpenseService expenseService;
     private final BudgetService budgetService;
+    private final RateService rateService;
 
     @Autowired
     public DashboardController(CustomerService customerService, TicketService ticketService, LeadService leadService,
-            ExpenseService expenseService, BudgetService budgetService) {
+            ExpenseService expenseService, BudgetService budgetService, RateService rateService) {
         this.customerService = customerService;
         this.ticketService= ticketService;
         this.leadService= leadService;
         this.expenseService= expenseService;
         this.budgetService= budgetService;
+        this.rateService= rateService;
     }
 
     @GetMapping("/customer")
@@ -165,7 +169,15 @@ public class DashboardController {
         return new ResponseEntity<>(topCustomers, HttpStatus.OK);
     }
 
-    
+    @PostMapping("/rate/{rateValue}")
+    public Rate saveRate(@PathVariable BigDecimal rateValue) {
+        return rateService.save(rateValue);
+    }
+
+    @GetMapping("/rate")
+    public Rate getLast(){
+        return rateService.getLast();
+    }
 
 
     

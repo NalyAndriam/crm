@@ -34,4 +34,5 @@ public interface LeadService {
     public void deleteAllByCustomer(Customer customer);
 
     public BigDecimal getSumAmount();
+    public BigDecimal sumAmountByCustomerId(Integer customerId);
 }

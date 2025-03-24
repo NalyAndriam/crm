@@ -26,4 +26,5 @@ public interface ExpenseRepository extends JpaRepository<Expense, Integer> {
     public Expense findByLeadLeadId(Integer leadId);
 
 
+
 }

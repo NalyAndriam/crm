@@ -100,4 +100,9 @@ public class LeadServiceImpl implements LeadService {
     public BigDecimal getSumAmount(){
         return leadRepository.getSumAmount();
     }
+
+    @Override
+    public BigDecimal sumAmountByCustomerId(Integer customerId){
+        return leadRepository.sumAmountByCustomerId(customerId);
+    }
 }

@@ -90,6 +90,16 @@ public class DashboardController {
         return ticketService.getSumAmount();
     }
 
+    @GetMapping("/ticket/sum/customer/{customerId}")
+    public BigDecimal getTicketSumAmountByCustomerId(@PathVariable Integer customerId){
+        return ticketService.sumAmountByCustomerId(customerId);
+    }
+
+    @GetMapping("/ticket/{ticketId}/expense")
+    public Expense getExpenseByTicketId(@PathVariable Integer ticketId){
+        return expenseService.findByTicketId(ticketId);
+    }
+
     @GetMapping("/lead")
     public List<Lead> getAllLeads(){
         return leadService.findAll();
@@ -123,14 +133,30 @@ public class DashboardController {
         return leadService.getSumAmount();
     }
 
+    @GetMapping("/lead/sum/customer/{customerId}")
+    public BigDecimal getLeadSumAmountByCustomerId(@PathVariable Integer customerId){
+        return leadService.sumAmountByCustomerId(customerId);
+    }
+
+    @GetMapping("/lead/{leadId}/expense")
+    public Expense getExpenseByLeadId(@PathVariable Integer leadId){
+        return expenseService.findByLeadId(leadId);
+    }
+
     @GetMapping("/expense")
     public List<Expense> getAllExpenses(){
         return expenseService.findAll();
     }
 
+
     @GetMapping("/budget/sum")
     public BigDecimal getBudgetSumAmount(){
         return budgetService.getSumAmount();
+    }
+
+    @GetMapping("/budget/sum/customer/{customerId}")
+    public BigDecimal getBudgetSumAmountByCustomerId(@PathVariable Integer customerId){
+        return budgetService.sumAmountByCustomerId(customerId);
     }
 
     @GetMapping("/budget/customer/top3")

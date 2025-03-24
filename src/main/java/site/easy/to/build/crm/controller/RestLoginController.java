@@ -40,19 +40,20 @@ public class RestLoginController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
         User user;
-        try {
-            // Récupérer l'utilisateur par email
-            user = userService.findByEmail(loginRequest.getEmail());
+        // try {
+        //     // Récupérer l'utilisateur par email
+        //     user = userService.findByEmail(loginRequest.getEmail());
 
-            // Si l'utilisateur existe, renvoyer une réponse OK avec les détails de l'utilisateur
-        } catch (Exception e) {
-            // Si l'utilisateur n'est pas trouvé, renvoyer une réponse Unauthorized
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Email incorrect");
-        }
-        if (user != null && isManager(user)) {
-            return ResponseEntity.ok(user);
-        }
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Email incorrect");
+        //     // Si l'utilisateur existe, renvoyer une réponse OK avec les détails de l'utilisateur
+        // } catch (Exception e) {
+        //     // Si l'utilisateur n'est pas trouvé, renvoyer une réponse Unauthorized
+        //     return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Email incorrect");
+        // }
+        // if (user != null && isManager(user)) {
+        //     return ResponseEntity.ok(user);
+        // }
+        return ResponseEntity.ok("hello");
+        // return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Email incorrect");
     }
 
     public boolean isManager(User user) {

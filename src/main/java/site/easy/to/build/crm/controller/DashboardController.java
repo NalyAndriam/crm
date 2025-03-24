@@ -2,6 +2,7 @@ package site.easy.to.build.crm.controller;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -131,6 +132,13 @@ public class DashboardController {
     public BigDecimal getBudgetSumAmount(){
         return budgetService.getSumAmount();
     }
+
+    @GetMapping("/budget/customer/top3")
+    public ResponseEntity<List<Map<String, Object>>> getTop3Customers() {
+        List<Map<String, Object>> topCustomers = budgetService.getTop3CustomersByBudgetSum();
+        return new ResponseEntity<>(topCustomers, HttpStatus.OK);
+    }
+
     
 
 

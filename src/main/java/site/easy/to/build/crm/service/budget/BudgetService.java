@@ -17,5 +17,7 @@ public interface BudgetService {
     public List<Budget> findByCustomerId(Integer customerId);
 
     public BigDecimal sumAmountByCustomerId( Integer customerId);
+
+    public BigDecimal getSumAmount();
     
 }

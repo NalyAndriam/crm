@@ -15,6 +15,7 @@ import site.easy.to.build.crm.entity.Customer;
 import site.easy.to.build.crm.entity.Expense;
 import site.easy.to.build.crm.entity.Lead;
 import site.easy.to.build.crm.entity.Ticket;
+import site.easy.to.build.crm.service.budget.BudgetService;
 import site.easy.to.build.crm.service.customer.CustomerService;
 import site.easy.to.build.crm.service.expense.ExpenseService;
 import site.easy.to.build.crm.service.lead.LeadService;
@@ -29,14 +30,16 @@ public class DashboardController {
     private final TicketService ticketService;
     private final LeadService leadService;
     private final ExpenseService expenseService;
+    private final BudgetService budgetService;
 
     @Autowired
     public DashboardController(CustomerService customerService, TicketService ticketService, LeadService leadService,
-            ExpenseService expenseService) {
+            ExpenseService expenseService, BudgetService budgetService) {
         this.customerService = customerService;
         this.ticketService= ticketService;
         this.leadService= leadService;
         this.expenseService= expenseService;
+        this.budgetService= budgetService;
     }
 
     @GetMapping("/customer")
@@ -86,6 +89,12 @@ public class DashboardController {
         return leadService.findAll();
     }
 
+    @GetMapping("/lead/count")
+    public long getCountLead(){
+        List<Lead> leads= leadService.findAll();
+        return leads.size();
+    }
+
     @GetMapping("/lead/customer/{customerId}")
     public List<Lead> getAllLeadByCustomerId(@PathVariable("customerId") Integer customerId){
         return leadService.getCustomerLeads(customerId);
@@ -102,6 +111,18 @@ public class DashboardController {
         Lead lead= leadService.findByLeadId(leadId);
         leadService.delete(lead);
     }
+
+    @GetMapping("/expense")
+    public List<Expense> getAllExpenses(){
+        return expenseService.findAll();
+    }
+
+    @GetMapping("/budget/sum")
+    public BigDecimal getBudgetSumAmount(){
+        return budgetService.getSumAmount();
+    }
+    
+    
 
     
 

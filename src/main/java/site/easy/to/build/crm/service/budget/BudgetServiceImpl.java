@@ -37,5 +37,10 @@ public class BudgetServiceImpl implements BudgetService{
     public BigDecimal sumAmountByCustomerId( Integer customerId){
         return budgetRepository.sumAmountByCustomerCustomerId(customerId);
     }
+
+    @Override
+    public BigDecimal getSumAmount(){
+        return budgetRepository.getSumAmount();
+    }
     
 }

@@ -2,10 +2,12 @@ package site.easy.to.build.crm.repository;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import site.easy.to.build.crm.entity.Customer;
 import site.easy.to.build.crm.entity.Lead;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Repository
@@ -31,4 +33,7 @@ public interface LeadRepository extends JpaRepository<Lead, Integer> {
     long countByCustomerCustomerId(int customerId);
 
     void deleteAllByCustomer(Customer customer);
+
+    @Query("SELECT SUM(e.amount) FROM Expense e where e.lead.id is not null")
+    public BigDecimal getSumAmount();
 }

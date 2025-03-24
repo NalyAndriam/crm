@@ -84,6 +84,11 @@ public class DashboardController {
         ticketService.delete(ticket);
     }
 
+    @GetMapping("/ticket/sum")
+    public BigDecimal getTicketSumAmount(){
+        return ticketService.getSumAmount();
+    }
+
     @GetMapping("/lead")
     public List<Lead> getAllLeads(){
         return leadService.findAll();
@@ -112,6 +117,11 @@ public class DashboardController {
         leadService.delete(lead);
     }
 
+    @GetMapping("/lead/sum")
+    public BigDecimal getLeadSumAmount(){
+        return leadService.getSumAmount();
+    }
+
     @GetMapping("/expense")
     public List<Expense> getAllExpenses(){
         return expenseService.findAll();
@@ -122,7 +132,7 @@ public class DashboardController {
         return budgetService.getSumAmount();
     }
     
-    
+
 
     
 

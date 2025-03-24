@@ -7,6 +7,7 @@ import site.easy.to.build.crm.entity.Customer;
 import site.easy.to.build.crm.repository.TicketRepository;
 import site.easy.to.build.crm.entity.Ticket;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -94,5 +95,10 @@ public class TicketServiceImpl implements TicketService{
     @Override
     public long count(){
         return ticketRepository.count();
+    }
+
+    @Override
+    public BigDecimal getSumAmount(){
+        return ticketRepository.getSumAmount();
     }
 }

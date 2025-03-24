@@ -3,6 +3,7 @@ package site.easy.to.build.crm.repository;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import site.easy.to.build.crm.entity.Customer;
 import site.easy.to.build.crm.entity.Ticket;
@@ -36,4 +37,7 @@ public interface TicketRepository extends JpaRepository<Ticket, Integer> {
 
     @Query("SELECT SUM(e.amount) FROM Expense e where e.ticket.id is not null")
     public BigDecimal getSumAmount();
+
+    @Query("SELECT SUM(e.amount) FROM Expense e WHERE e.customer.id = :customerId and e.ticket.id is not null")
+    public BigDecimal sumAmountByCustomerId(@Param("customerId") Integer customerId);
 }

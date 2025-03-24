@@ -1,5 +1,7 @@
 package site.easy.to.build.crm.service.rate;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -17,8 +19,11 @@ public class RateServiceImpl implements RateService{
     }
 
     @Override
-    public Rate save(Rate Rate) {
-        return RateRepository.save(Rate);
+    public Rate save(BigDecimal rateValue) {
+        Rate rate= new Rate();
+        rate.setInsertedAt(LocalDateTime.now());
+        rate.setRate(rateValue);
+        return RateRepository.save(rate);
     }
 
     @Override

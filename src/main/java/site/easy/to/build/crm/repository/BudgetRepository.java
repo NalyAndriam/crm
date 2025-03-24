@@ -19,4 +19,16 @@ public interface BudgetRepository extends JpaRepository<Budget, Integer> {
 
     @Query("SELECT SUM(b.amount) FROM Budget b WHERE b.customer.id = :customerId")
     public BigDecimal sumAmountByCustomerCustomerId(@Param("customerId") Integer customerId);
+
+    @Query("SELECT SUM(b.amount) FROM Budget b")
+    public BigDecimal getSumAmount();
+
+    @Query("SELECT b.customer, SUM(b.amount) as totalBudget " +
+       "FROM Budget b " +
+       "GROUP BY b.customer " +
+       "ORDER BY totalBudget DESC")
+    List<Object[]> findTopCustomersByBudgetSum();
+
+
+
 }

@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
+import site.easy.to.build.crm.service.importt.BudgetImportService;
 import site.easy.to.build.crm.service.importt.CustomerImportService;
 import site.easy.to.build.crm.service.importt.CustomerImportService.ImportResult;
 import site.easy.to.build.crm.service.importt.ImportService;
@@ -19,11 +20,14 @@ public class ImportController {
 
     private final ImportService importService;
     CustomerImportService customerImportService;
+    BudgetImportService budgetImportService;
 
     @Autowired
-    public ImportController(ImportService importService, CustomerImportService customerImportService) {
+    public ImportController(ImportService importService, CustomerImportService customerImportService,
+                            BudgetImportService budgetImportService) {
         this.importService = importService;
         this.customerImportService= customerImportService;
+        this.budgetImportService= budgetImportService;
     }
     
     @GetMapping("/")
@@ -42,9 +46,25 @@ public class ImportController {
     // }
 
     @PostMapping("/customer")
-    public String importCustomers(@RequestParam("filePath") MultipartFile filePath, Model model) {
+    public String importCustomers(@RequestParam("customerCsv") MultipartFile customerCsv, Model model) {
         try {
-            ImportResult result = customerImportService.importCustomers(filePath);
+            ImportResult result = customerImportService.importCustomers(customerCsv);
+            model.addAttribute("importResult", result);
+            if (result.isSuccess()) {
+                model.addAttribute("successMessage", result.getMessage());
+            } else {
+                model.addAttribute("errorMessage", result.getMessage());
+            }
+        } catch (Exception e) {
+            model.addAttribute("errorMessage", "Une erreur inattendue s'est produite : " + e.getMessage());
+        }
+        return "import/import"; 
+    }
+
+    @PostMapping("/budget")
+    public String importbudgets(@RequestParam("budgetCsv") MultipartFile budgetCsv, Model model) {
+        try {
+            site.easy.to.build.crm.entity.ImportResult result = budgetImportService.importBudgets(budgetCsv);
             model.addAttribute("importResult", result);
             if (result.isSuccess()) {
                 model.addAttribute("successMessage", result.getMessage());

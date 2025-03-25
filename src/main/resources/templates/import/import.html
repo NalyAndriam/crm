@@ -93,7 +93,7 @@
                                             
                                             <div id="customers-section">
                                                 
-                                                <form th:action="@{/import/budget}" method="post" enctype="multipart/form-data">
+                                                <form th:action="@{/import/expense}" method="post" enctype="multipart/form-data">
                                                     <!-- <div class="fallback">
                                                         <div class="custom-file mb-3">
                                                             <input type="file" class="custom-file-input" id="customFile" name="customerCsv" accept=".csv" required>
@@ -101,10 +101,17 @@
                                                         </div>
                                                     </div> -->
 
-                                                    <div class="fallback">
+                                                    <!-- <div class="fallback">
                                                         <div class="custom-file mb-3">
                                                             <input type="file" class="custom-file-input" id="customFile" name="budgetCsv" accept=".csv" required>
                                                             <label class="custom-file-label" for="customFile">Import budget data</label>
+                                                        </div>
+                                                    </div> -->
+
+                                                    <div class="fallback">
+                                                        <div class="custom-file mb-3">
+                                                            <input type="file" class="custom-file-input" id="customFile" name="expenseCsv" accept=".csv" required>
+                                                            <label class="custom-file-label" for="customFile">Import ticket/lead data</label>
                                                         </div>
                                                     </div>
                                                     

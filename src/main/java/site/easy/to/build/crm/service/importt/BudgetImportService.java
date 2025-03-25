@@ -65,7 +65,7 @@ public class BudgetImportService {
         }
     }
 
-    private void createTempBudgetTable() {
+    public void createTempBudgetTable() {
         System.out.println("Creation table temporaire");
         String sql = "CREATE TEMPORARY TABLE temp_budget ("
                 + "line_number INT NOT NULL," // Colonne pour le numéro de ligne
@@ -85,12 +85,12 @@ public class BudgetImportService {
         }
     }
 
-    private Integer getCustomerId(String email){
+    public Integer getCustomerId(String email){
         Customer customer= customerRepository.findByEmail(email);
         return customer.getCustomerId();
     }
 
-    private List<BudgetCsvDto> parseCsv(MultipartFile file) throws IOException {
+    public List<BudgetCsvDto> parseCsv(MultipartFile file) throws IOException {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("Le fichier CSV est vide ou non fourni");
         }
@@ -119,7 +119,7 @@ public class BudgetImportService {
         }
     }
 
-    private void insertIntoTempTable(List<BudgetCsvDto> budgets) throws SQLException {
+    public void insertIntoTempTable(List<BudgetCsvDto> budgets) throws SQLException {
         System.out.println("Insertion dans table temporaire");
         String sql = "INSERT INTO temp_budget (line_number, customer_id, amount, budget_date, email) " +
                 "VALUES (?, ?, ?, ?, ?)";
@@ -132,15 +132,9 @@ public class BudgetImportService {
                     System.out.println("Insertion de la ligne " + (i + 1) + ": " + 
                             budget.getAmount());
                     ps.setInt(1, i + 1); // Numéro de ligne (commence à 1)
-
-                    int customerId=0;
-                    Customer customer= customerRepository.findByEmail(budget.getEmail());
-                    if (customer!=null){
-                        customerId= customer.getCustomerId();
-                    } 
-                    System.out.println("Id de customer recupere: "+ customerId);
-
-                    ps.setInt(2, customerId);
+                    
+                    // On laisse customer_id à 0 pour l'instant, la validation se fera après
+                    ps.setInt(2, 0); 
                     ps.setObject(3, budget.getAmount());
                     ps.setObject(4, LocalDateTime.now());
                     ps.setString(5, budget.getEmail());
@@ -155,42 +149,52 @@ public class BudgetImportService {
         } catch (Exception e) {
             System.err.println("Erreur lors de l'insertion : " + e.getMessage());
             e.printStackTrace();
-            throw new SQLException(e.getMessage()); // Propager l'erreur pour la gérer dans importBudgets
+            throw new SQLException(e.getMessage());
         }
     }
 
-    private void validateCustomer() {
-        String sql = "SELECT line_number, email FROM temp_budget " +
-                "WHERE customer_id=0 " +
+    public void validateCustomer() {
+        // Vérifier si l'email dans temp_budget existe dans temp_customer
+        String sql = "SELECT tb.line_number, tb.email " +
+                "FROM temp_budget tb " +
+                "LEFT JOIN temp_customer tc ON tb.email = tc.email " +
+                "WHERE tc.email IS NULL " +
                 "LIMIT 1";
         
         List<String> invalidCustomers = jdbcTemplate.query(sql, (rs, rowNum) -> 
-                "Ligne " + rs.getInt("line_number") + ": Email=" + rs.getString("email"));
+                "Budget CSV- Ligne " + rs.getInt("line_number") + ": Email=" + rs.getString("email"));
         if (!invalidCustomers.isEmpty()) {
-            throw new RuntimeException("Email de customer inexistant : " + invalidCustomers.get(0));
+            throw new RuntimeException("Email de customer inexistant dans temp_customer : " + invalidCustomers.get(0));
         }
     }
 
-    private void validateAmount() {
+    public void updateBudgetCustomerIds() {
+        String sql = "UPDATE temp_budget tb " +
+                "JOIN temp_customer tc ON tb.email = tc.email " +
+                "SET tb.customer_id = tc.line_number"; 
+        jdbcTemplate.update(sql);
+    }
+
+    public void validateAmount() {
         String sql = "SELECT line_number, amount FROM temp_budget " +
                 "WHERE amount<0 " +
                 "LIMIT 1";
         
         List<String> invalidMontants = jdbcTemplate.query(sql, (rs, rowNum) -> 
-                "Ligne " + rs.getInt("line_number") + ": Montant=" + rs.getInt("amount"));
+                "Budget CSV- Ligne " + rs.getInt("line_number") + ": Montant=" + rs.getInt("amount"));
         if (!invalidMontants.isEmpty()) {
             throw new RuntimeException("Montant negatif : " + invalidMontants.get(0));
         }
     }
 
-    private void validateData() {
+    public void validateData() {
         System.out.println("Validation des données");
         validateCustomer();
         validateAmount();
         System.out.println("Validation terminée");
     }
 
-    private void insertIntoBudgetTable() {
+    public void insertIntoBudgetTable() {
         String sql = "INSERT INTO budget (customer_id, amount, budget_date) " +
                 "SELECT customer_id, amount, budget_date FROM temp_budget";
         
@@ -198,7 +202,7 @@ public class BudgetImportService {
         System.out.println("Données insérées dans la table budget");
     }
 
-    private void cleanUpTempTable() {
+    public void cleanUpTempTable() {
         jdbcTemplate.execute("DROP TEMPORARY TABLE IF EXISTS temp_budget");
     }
 

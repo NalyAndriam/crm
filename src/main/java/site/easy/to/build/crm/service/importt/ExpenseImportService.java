@@ -79,7 +79,7 @@ public class ExpenseImportService {
 
 
 
-    private void createTempExpenseTable() {
+    public void createTempExpenseTable() {
         System.out.println("Création de la table temporaire temp_expense");
         String sql = "CREATE TEMPORARY TABLE temp_expense ("
                 + "temp_id INT AUTO_INCREMENT PRIMARY KEY," // Ajout
@@ -110,7 +110,7 @@ public class ExpenseImportService {
         }
     }
 
-    private List<ExpenseCsvDto> parseCsv(MultipartFile file) throws IOException {
+    public List<ExpenseCsvDto> parseCsv(MultipartFile file) throws IOException {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("Le fichier CSV est vide ou non fourni");
         }
@@ -139,7 +139,7 @@ public class ExpenseImportService {
         }
     }
 
-    private void insertIntoTempTable(List<ExpenseCsvDto> expenses) throws SQLException {
+    public void insertIntoTempTable(List<ExpenseCsvDto> expenses) throws SQLException {
         System.out.println("Insertion dans table temporaire");
         String sql = "INSERT INTO temp_expense (line_number, customer_id, customer_email, subject_or_name, type, status, amount, " +
                      "description, priority, manager_id, employee_id, phone, created_at) VALUES " +
@@ -152,18 +152,18 @@ public class ExpenseImportService {
                     ExpenseCsvDto expense = expenses.get(i);
                     System.out.println("Insertion de la ligne " + (i + 1) + ": " + expense.getSubjectOrName());
                     
-                    int customerId = 0;
-                    Customer customer = customerRepository.findByEmail(expense.getEmail());
-                    if (customer != null) {
-                        customerId = customer.getCustomerId();
-                    }
-                    System.out.println("Id de customer récupéré : " + customerId);
+                    // int customerId = 0;
+                    // Customer customer = customerRepository.findByEmail(expense.getEmail());
+                    // if (customer != null) {
+                    //     customerId = customer.getCustomerId();
+                    // }
+                    // System.out.println("Id de customer récupéré : " + customerId);
     
                     BigDecimal amount = expense.getAmount();
                     System.out.println("Valeur de amount avant insertion : " + amount);
     
                     ps.setInt(1, i + 1);
-                    ps.setInt(2, customerId);
+                    ps.setInt(2, 0);
                     ps.setString(3, expense.getEmail());
                     ps.setString(4, expense.getSubjectOrName());
                     ps.setString(5, expense.getType());
@@ -190,43 +190,46 @@ public class ExpenseImportService {
         }
     }
 
-    private void validateCustomer() {
-        String sql = "SELECT line_number, customer_email FROM temp_expense " +
-                "WHERE customer_id=0 " +
+    public void validateCustomer() {
+        // Vérifier si l'email dans temp_expense existe dans temp_customer
+        String sql = "SELECT tb.line_number, tb.customer_email " +
+                "FROM temp_expense tb " +
+                "LEFT JOIN temp_customer tc ON tb.customer_email = tc.email " +
+                "WHERE tc.email IS NULL " +
                 "LIMIT 1";
         
         List<String> invalidCustomers = jdbcTemplate.query(sql, (rs, rowNum) -> 
-                "Ligne " + rs.getInt("line_number") + ": Email=" + rs.getString("customer_email"));
+                "Expense CSV- Ligne " + rs.getInt("line_number") + ": Email=" + rs.getString("customer_email"));
         if (!invalidCustomers.isEmpty()) {
-            throw new RuntimeException("Email de customer inexistant : " + invalidCustomers.get(0));
+            throw new RuntimeException("Email de customer inexistant dans temp_customer : " + invalidCustomers.get(0));
         }
     }
 
-    private void validateType() {
+    public void validateType() {
         String sql = "SELECT line_number, type FROM temp_expense " +
                 "WHERE type NOT IN ('lead', 'ticket') " +
                 "LIMIT 1";
         
         List<String> invalidCustomers = jdbcTemplate.query(sql, (rs, rowNum) -> 
-                "Ligne " + rs.getInt("line_number") + ": Type=" + rs.getString("type"));
+                "Expense CSV- Ligne " + rs.getInt("line_number") + ": Type=" + rs.getString("type"));
         if (!invalidCustomers.isEmpty()) {
             throw new RuntimeException("Type invalide : " + invalidCustomers.get(0));
         }
     }
 
-    private void validateAmount() {
+    public void validateAmount() {
         String sql = "SELECT line_number, amount FROM temp_expense " +
                 "WHERE amount<0 AND amount IS NOT NULL " +
                 "LIMIT 1";
         
         List<String> invalidMontants = jdbcTemplate.query(sql, (rs, rowNum) -> 
-                "Ligne " + rs.getInt("line_number") + ": Montant=" + rs.getInt("amount"));
+                "Expense CSV- Ligne " + rs.getInt("line_number") + ": Montant=" + rs.getInt("amount"));
         if (!invalidMontants.isEmpty()) {
             throw new RuntimeException("Montant negatif : " + invalidMontants.get(0));
         }
     }
 
-    private void validateData() {
+    public void validateData() {
         System.out.println("Validation des données");
         validateCustomer();
         validateAmount();
@@ -234,7 +237,14 @@ public class ExpenseImportService {
         System.out.println("Validation terminée");
     }
 
-    private void insertIntoFinalTables() {
+    public void updateExpenseCustomerIds() {
+        String sql = "UPDATE temp_expense tb " +
+                "JOIN temp_customer tc ON tb.customer_email = tc.email " +
+                "SET tb.customer_id = tc.line_number"; 
+        jdbcTemplate.update(sql);
+    }
+
+    public void insertIntoFinalTables() {
         System.out.println("Insertion dans les tables finales");
     
         // Étape 1 : Insérer les leads et mettre à jour temp_expense avec lead_id
@@ -294,7 +304,7 @@ public class ExpenseImportService {
         }
     }
 
-    private void cleanUpTempTable() {
+    public void cleanUpTempTable() {
         jdbcTemplate.execute("DROP TEMPORARY TABLE IF EXISTS temp_expense");
     }
 
@@ -312,7 +322,7 @@ public class ExpenseImportService {
         return chaine.toString();
     }
 
-    private String generateTicketPriority() {
+    public String generateTicketPriority() {
         Random random = new Random();
         List<String> priority= new ArrayList<String>();
         priority.add("Low");
@@ -327,7 +337,7 @@ public class ExpenseImportService {
         return priority.get(randomIndex);
     }
 
-    private Integer getRandomUserId() {
+    public Integer getRandomUserId() {
         Random random = new Random();
         long totalUsers = userRepository.count();
         
@@ -341,7 +351,7 @@ public class ExpenseImportService {
         return allUsers.get(randomIndex).getId();
     }
 
-    private static String generatePhoneNumber() {
+    public static String generatePhoneNumber() {
         Random random = new Random();
         StringBuilder numero = new StringBuilder("03");
         for (int i = 0; i < 8; i++) {

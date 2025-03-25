@@ -55,7 +55,7 @@ public class CustomerImportService {
         }
     }
 
-    private void createTempCustomerTable() {
+    public void createTempCustomerTable() {
         System.out.println("Creation table temporaire");
         String sql = "CREATE TEMPORARY TABLE temp_customer ("
                 + "line_number INT NOT NULL," // Colonne pour le numéro de ligne
@@ -78,7 +78,7 @@ public class CustomerImportService {
         }
     }
 
-    private List<CustomerCsvDto> parseCsv(MultipartFile file) throws IOException {
+    public List<CustomerCsvDto> parseCsv(MultipartFile file) throws IOException {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("Le fichier CSV est vide ou non fourni");
         }
@@ -107,7 +107,7 @@ public class CustomerImportService {
         }
     }
 
-    private void insertIntoTempTable(List<CustomerCsvDto> customers) throws SQLException {
+    public void insertIntoTempTable(List<CustomerCsvDto> customers) throws SQLException {
         System.out.println("Insertion dans table temporaire");
         String sql = "INSERT INTO temp_customer (line_number, name, email, phone, country, user_id, created_at) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?)";
@@ -141,27 +141,27 @@ public class CustomerImportService {
         }
     }
 
-    private void validateData() {
+    public void validateData() {
         System.out.println("Validation des données");
         validateRequiredFields();
         validateEmailFormat();
         System.out.println("Validation terminée");
     }
 
-    private void validateRequiredFields() {
+    public void validateRequiredFields() {
         String sql = "SELECT line_number, name, email FROM temp_customer " +
                 "WHERE name IS NULL OR name = '' OR email IS NULL OR email = '' OR user_id IS NULL " +
                 "LIMIT 1";
         
         List<String> invalidRows = jdbcTemplate.query(sql, (rs, rowNum) -> 
-                "Ligne " + rs.getInt("line_number") + ": name=" + rs.getString("name") + 
+                "Customer CSV- Ligne " + rs.getInt("line_number") + ": name=" + rs.getString("name") + 
                 ", email=" + rs.getString("email"));
         if (!invalidRows.isEmpty()) {
             throw new RuntimeException("Champs obligatoires manquants : " + invalidRows.get(0));
         }
     }
 
-    private void validateEmailFormat() {
+    public void validateEmailFormat() {
         String sql = "SELECT line_number, email FROM temp_customer " +
                 "WHERE email NOT LIKE '%@%.%' " +
                 "OR email IS NULL " +
@@ -169,13 +169,13 @@ public class CustomerImportService {
                 "LIMIT 1";
         
         List<String> invalidEmails = jdbcTemplate.query(sql, (rs, rowNum) -> 
-                "Ligne " + rs.getInt("line_number") + ": email=" + rs.getString("email"));
+                "Customer CSV- Ligne " + rs.getInt("line_number") + ": email=" + rs.getString("email"));
         if (!invalidEmails.isEmpty()) {
             throw new RuntimeException("Format d'email invalide : " + invalidEmails.get(0));
         }
     }
 
-    private void insertIntoCustomerTable() {
+    public void insertIntoCustomerTable() {
         String sql = "INSERT INTO customer (name, email, phone, country, user_id, created_at, profile_id) " +
                 "SELECT name, email, phone, country, user_id, created_at, profile_id FROM temp_customer";
         
@@ -183,11 +183,11 @@ public class CustomerImportService {
         System.out.println("Données insérées dans la table customer");
     }
 
-    private void cleanUpTempTable() {
+    public void cleanUpTempTable() {
         jdbcTemplate.execute("DROP TEMPORARY TABLE IF EXISTS temp_customer");
     }
 
-    private Integer getRandomUserId() {
+    public Integer getRandomUserId() {
         Random random = new Random();
         long totalUsers = userRepository.count();
         
@@ -201,7 +201,7 @@ public class CustomerImportService {
         return allUsers.get(randomIndex).getId();
     }
 
-    private static String generatePhoneNumber() {
+    public static String generatePhoneNumber() {
         Random random = new Random();
         StringBuilder numero = new StringBuilder("03");
         for (int i = 0; i < 8; i++) {
@@ -224,7 +224,7 @@ public class CustomerImportService {
         return chaine.toString();
     }
 
-    private String findErrorLine(Exception e, List<CustomerCsvDto> customers) {
+    public String findErrorLine(Exception e, List<CustomerCsvDto> customers) {
         if (e instanceof SQLException) {
             String message = e.getMessage();
             int lineIndex = findErrorIndex(e, customers);
@@ -237,7 +237,7 @@ public class CustomerImportService {
         return "Impossible de déterminer la ligne exacte";
     }
 
-    private int findErrorIndex(Exception e, List<CustomerCsvDto> customers) {
+    public int findErrorIndex(Exception e, List<CustomerCsvDto> customers) {
         String message = e.getMessage();
         try {
             if (message.contains("à la ligne")) {
